@@ -1,0 +1,12 @@
+name = "brookebrodack-websub"
+main = "index.ts"
+compatibility_date = "2024-12-01"
+
+[vars]
+GH_OWNER = "btakita"
+GH_REPO = "brookebrodack-dev"
+GH_WORKFLOW = "deploy.yml"
+
+# Secrets (set via `wrangler secret put`):
+# - GH_TOKEN: GitHub PAT with actions:write scope
+# - WEBSUB_SECRET: Shared secret for HMAC verification

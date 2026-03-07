@@ -1,0 +1,8 @@
+# Cloudflare Pages redirects
+# See: https://developers.cloudflare.com/pages/configuration/redirects/
+
+# www to apex
+https://www.brookebrodack.net/* https://brookebrodack.net/:splat 301
+
+# Legacy subdomain redirect
+https://bb.briantakita.me/* https://brookebrodack.net/:splat 301

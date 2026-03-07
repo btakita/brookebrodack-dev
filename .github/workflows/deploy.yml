@@ -1,0 +1,62 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      trigger:
+        description: 'What triggered this build (e.g., websub, manual)'
+        required: false
+        default: 'manual'
+  schedule:
+    - cron: '0 */6 * * *' # Every 6 hours for YouTube data freshness
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: oven-sh/setup-bun@v2
+
+      - run: bun install --frozen-lockfile --ignore-scripts
+
+      # Run database migrations to initialize schema
+      - name: Initialize database
+        run: cd app/brookebrodack-site && bun db/migrate.ts
+        env:
+          NODE_ENV: production
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          YOUTUBE_CHANNELID: ${{ secrets.YOUTUBE_CHANNELID }}
+          YOUTUBE_RSS_URL: ${{ secrets.YOUTUBE_RSS_URL }}
+          AUTHORY_YOUTUBE_RSS_URL: ${{ secrets.AUTHORY_YOUTUBE_RSS_URL }}
+
+      # Build browser + server bundles
+      - name: Build
+        run: bun run build
+        env:
+          NODE_ENV: production
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          YOUTUBE_CHANNELID: ${{ secrets.YOUTUBE_CHANNELID }}
+          YOUTUBE_RSS_URL: ${{ secrets.YOUTUBE_RSS_URL }}
+          AUTHORY_YOUTUBE_RSS_URL: ${{ secrets.AUTHORY_YOUTUBE_RSS_URL }}
+
+      # Pre-render all routes to static HTML
+      - name: Static export
+        run: cd app/brookebrodack-site && bun static-export.ts
+        env:
+          NODE_ENV: production
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          YOUTUBE_CHANNELID: ${{ secrets.YOUTUBE_CHANNELID }}
+          YOUTUBE_RSS_URL: ${{ secrets.YOUTUBE_RSS_URL }}
+          AUTHORY_YOUTUBE_RSS_URL: ${{ secrets.AUTHORY_YOUTUBE_RSS_URL }}
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy app/brookebrodack-site/dist/browser --project-name=brookebrodack
