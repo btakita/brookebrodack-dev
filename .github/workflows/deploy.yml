@@ -44,7 +44,7 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           YOUTUBE_CHANNELID: ${{ secrets.YOUTUBE_CHANNELID }}
           YOUTUBE_RSS_URL: ${{ secrets.YOUTUBE_RSS_URL }}
-          AUTHORY_YOUTUBE_RSS_URL: ${{ secrets.AUTHORY_YOUTUBE_RSS_URL }}
+
 
       # Build browser + server bundles
       - name: Build
@@ -54,7 +54,7 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           YOUTUBE_CHANNELID: ${{ secrets.YOUTUBE_CHANNELID }}
           YOUTUBE_RSS_URL: ${{ secrets.YOUTUBE_RSS_URL }}
-          AUTHORY_YOUTUBE_RSS_URL: ${{ secrets.AUTHORY_YOUTUBE_RSS_URL }}
+
 
       # Pre-render all routes to static HTML
       - name: Static export
@@ -64,7 +64,7 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           YOUTUBE_CHANNELID: ${{ secrets.YOUTUBE_CHANNELID }}
           YOUTUBE_RSS_URL: ${{ secrets.YOUTUBE_RSS_URL }}
-          AUTHORY_YOUTUBE_RSS_URL: ${{ secrets.AUTHORY_YOUTUBE_RSS_URL }}
+
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3

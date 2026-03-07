@@ -20,6 +20,7 @@ export interface Env {
 	GH_OWNER: string
 	GH_REPO: string
 	GH_WORKFLOW: string
+	YOUTUBE_CHANNELID: string
 }
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
@@ -32,6 +33,33 @@ export default {
 		}
 		return new Response('Method not allowed', { status: 405 })
 	},
+	async scheduled(_event: ScheduledEvent, env: Env, _ctx: ExecutionContext): Promise<void> {
+		await renew_subscription(env)
+	},
+}
+/**
+ * Re-subscribe to YouTube WebSub feed.
+ * Called by cron trigger every 7 days to keep the lease active.
+ */
+async function renew_subscription(env: Env): Promise<void> {
+	const topic = `https://www.youtube.com/xml/feeds/videos.xml?channel_id=${env.YOUTUBE_CHANNELID}`
+	const hub = 'https://pubsubhubbub.appspot.com/subscribe'
+	// Worker URL is derived from the worker name
+	const callback = `https://brookebrodack-websub.brian-takita.workers.dev`
+	const body = new URLSearchParams({
+		'hub.callback': callback,
+		'hub.topic': topic,
+		'hub.verify': 'async',
+		'hub.mode': 'subscribe',
+		'hub.secret': env.WEBSUB_SECRET,
+		'hub.lease_seconds': '864000',
+	})
+	const response = await fetch(hub, {
+		method: 'POST',
+		body,
+		headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+	})
+	console.info(`WebSub renewal: ${response.status} ${response.statusText}`)
 }
 /**
  * WebSub hub verification callback.

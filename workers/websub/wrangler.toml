@@ -2,10 +2,14 @@ name = "brookebrodack-websub"
 main = "index.ts"
 compatibility_date = "2024-12-01"
 
+[triggers]
+crons = ["0 0 */7 * *"]  # Re-subscribe every 7 days
+
 [vars]
 GH_OWNER = "btakita"
 GH_REPO = "brookebrodack-dev"
 GH_WORKFLOW = "deploy.yml"
+YOUTUBE_CHANNELID = "UCO42ciP_nkDcOlATRjLXCqQ"
 
 # Secrets (set via `wrangler secret put`):
 # - GH_TOKEN: GitHub PAT with actions:write scope
