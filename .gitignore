@@ -7,3 +7,4 @@ public/product
 letsencrypt
 tmp
 *.iml
+.agent-doc/
