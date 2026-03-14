@@ -82,7 +82,7 @@ jobs:
             "site/index.html"
             "store/index.html"
             "robots.txt"
-            "rss"
+            "rss/index.html"
             "sitemap.xml"
           )
           missing=0
