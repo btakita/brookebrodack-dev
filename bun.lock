@@ -171,6 +171,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@btakita/domain--browser--brookebrodack": "workspace:*",
+        "@btakita/ui--server--brookebrodack": "workspace:*",
         "@rappstack/domain--browser": "^0.1.0",
         "ctx-core": "^7.2.27",
       },
@@ -188,6 +189,7 @@
         "ui--server--brookebrodack__public__ln": "bun ./bin/ui--server--brookebrodack__public__ln.js",
       },
       "dependencies": {
+        "@btakita/brookebrodack-site": "workspace:*",
         "@btakita/domain--any--brookebrodack": "workspace:*",
         "@btakita/domain--server--brookebrodack": "workspace:*",
         "@btakita/ui--any--brookebrodack": "workspace:*",
