@@ -78,7 +78,7 @@
         "drizzle-orm": "^0.45.1",
         "elysia": "^1.4.27",
         "esbuild-plugin-esmfile": "^0.2.11",
-        "esbuild-plugin-object-store-asset": "^0.0.2",
+        "esbuild-plugin-object-store-asset": "0.0.3",
         "esmcss": "^0.2.14",
         "marked": "^17.0.4",
         "object-store-asset": "^0.0.1",
@@ -827,7 +827,7 @@
 
     "esbuild-plugin-esmfile": ["esbuild-plugin-esmfile@0.2.12", "", { "peerDependencies": { "esbuild": "^0.27.3" } }, "sha512-dJLLOujuOV4JigC/RfAbLnwBv8ryeAZTzOy9l226i2W43OU/bBzdVYVLJavuufxAlJBg2F0KLkO6VAd1UwfV4w=="],
 
-    "esbuild-plugin-object-store-asset": ["esbuild-plugin-object-store-asset@0.0.2", "", { "dependencies": { "object-store-asset": ">=0.0.1" }, "peerDependencies": { "esbuild": "^0.27.3" } }, "sha512-OTkClTzK8MSHQWprD/ZHmpB7uGgQ7ualRdnwzCDaeT7pB8ijjuRPnbtFuHZ9XZBkAck2gTuVrdsA1iamiKLGTQ=="],
+    "esbuild-plugin-object-store-asset": ["esbuild-plugin-object-store-asset@0.0.3", "", { "dependencies": { "object-store-asset": ">=0.0.1" }, "peerDependencies": { "esbuild": "^0.27.3" } }, "sha512-Fnp3z3q0bWKLjwIRSSbXW8M0jWoCsGZAI7imHlDV0xbFl8xfTD8ZyYK4iO7lL55z9BoV7ZU5JTnjJanc6tHrxw=="],
 
     "esbuild-register": ["esbuild-register@3.6.0", "", { "dependencies": { "debug": "^4.3.4" }, "peerDependencies": { "esbuild": ">=0.12 <1" } }, "sha512-H2/S7Pm8a9CL1uhp9OvjwrBh5Pvx0H8qVOxNu8Wed9Y7qv56MPtq+GGM8RJpq6glYJn9Wspr8uw7l55uyinNeg=="],
 
