@@ -58,7 +58,12 @@ jobs:
 
       # Pre-render all routes to static HTML
       - name: Static export
-        run: cd app/brookebrodack-site && bun static-export.ts
+        run: |
+          cd app/brookebrodack-site
+          bun ./start.ts &
+          sleep 5
+          bun ./static-export.ts
+          kill %1
         env:
           NODE_ENV: production
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
