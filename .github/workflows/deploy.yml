@@ -51,6 +51,7 @@ jobs:
         run: bun run build
         env:
           NODE_ENV: production
+          ASSET_BASE_URL: ${{ secrets.ASSET_BASE_URL }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           YOUTUBE_CHANNELID: ${{ secrets.YOUTUBE_CHANNELID }}
           YOUTUBE_RSS_URL: ${{ secrets.YOUTUBE_RSS_URL }}

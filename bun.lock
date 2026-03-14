@@ -78,8 +78,10 @@
         "drizzle-orm": "^0.45.1",
         "elysia": "^1.4.27",
         "esbuild-plugin-esmfile": "^0.2.11",
+        "esbuild-plugin-object-store-asset": "^0.0.1",
         "esmcss": "^0.2.14",
         "marked": "^17.0.4",
+        "object-store-asset": "^0.0.1",
         "relementjs": "^0.80.32",
         "relysjs": "^1.21.74",
         "tailwindcss-noscript": "^2.0.1",
@@ -211,6 +213,9 @@
         "typescript": "^5.5.3",
       },
     },
+  },
+  "overrides": {
+    "object-store-asset": "0.0.1",
   },
   "packages": {
     "@alloc/quick-lru": ["@alloc/quick-lru@5.2.0", "", {}, "sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw=="],
@@ -839,6 +844,8 @@
 
     "esbuild-plugin-esmfile": ["esbuild-plugin-esmfile@0.2.12", "", { "peerDependencies": { "esbuild": "^0.27.3" } }, "sha512-dJLLOujuOV4JigC/RfAbLnwBv8ryeAZTzOy9l226i2W43OU/bBzdVYVLJavuufxAlJBg2F0KLkO6VAd1UwfV4w=="],
 
+    "esbuild-plugin-object-store-asset": ["esbuild-plugin-object-store-asset@0.0.1", "", { "dependencies": { "object-store-asset": "workspace:*" }, "peerDependencies": { "esbuild": "^0.27.3" } }, "sha512-geb4Wsp5CCRZ1jGqyNAsqRADuBIBSXQc2SXKaisGE7GzX3fouKGS9GOk1GF/Pity6w3a9pKHwfALdGb/ouhxqw=="],
+
     "esbuild-register": ["esbuild-register@3.6.0", "", { "dependencies": { "debug": "^4.3.4" }, "peerDependencies": { "esbuild": ">=0.12 <1" } }, "sha512-H2/S7Pm8a9CL1uhp9OvjwrBh5Pvx0H8qVOxNu8Wed9Y7qv56MPtq+GGM8RJpq6glYJn9Wspr8uw7l55uyinNeg=="],
 
     "esbuild-style-plugin": ["esbuild-style-plugin@1.6.3", "", { "dependencies": { "@types/less": "^3.0.3", "@types/sass": "^1.43.1", "@types/stylus": "^0.48.38", "glob": "^10.2.2", "postcss": "^8.4.31", "postcss-modules": "^6.0.0" } }, "sha512-XPEKf4FjLjEVLv/dJH4UxDzXCrFHYpD93DBO8B+izdZARW5b7nNKQbnKv3J+7VDWJbgCU+hzfgIh2AuIZzlmXQ=="],
@@ -1214,6 +1221,8 @@
     "object-assign": ["object-assign@2.1.1", "", {}, "sha512-CdsOUYIh5wIiozhJ3rLQgmUTgcyzFwZZrqhkKhODMoGtPKM+wt0h0CNIoauJWMsS9822EdzPsF/6mb4nLvPN5g=="],
 
     "object-hash": ["object-hash@3.0.0", "", {}, "sha512-RSn9F68PjH9HqtltsSnqYC1XXoWe9Bju5+213R98cNGttag9q9yAOTzdbsqvIa7aNm5WffBZFpWYr2aWrklWAw=="],
+
+    "object-store-asset": ["object-store-asset@0.0.1", "", {}, "sha512-ovJebWZ61Smd3N3F0+/om5G/acPlBs9c8VuSkL9mC3eLlUzBA6zY5CMtIDpy1pgv3AA4vkTnEuqN/S4Txjhnag=="],
 
     "once": ["once@1.4.0", "", { "dependencies": { "wrappy": "1" } }, "sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w=="],
 
