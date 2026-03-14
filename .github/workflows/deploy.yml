@@ -71,9 +71,60 @@ jobs:
           YOUTUBE_RSS_URL: ${{ secrets.YOUTUBE_RSS_URL }}
 
 
+      # Verify the static export produced expected files
+      - name: Verify build output
+        run: |
+          echo "Checking dist/browser/ for expected HTML files..."
+          expected_files=(
+            "index.html"
+            "brookers/index.html"
+            "content/index.html"
+            "site/index.html"
+            "store/index.html"
+            "robots.txt"
+            "rss"
+            "sitemap.xml"
+          )
+          missing=0
+          for f in "${expected_files[@]}"; do
+            if [ ! -f "app/brookebrodack-site/dist/browser/$f" ]; then
+              echo "MISSING: dist/browser/$f"
+              missing=1
+            else
+              echo "OK: dist/browser/$f"
+            fi
+          done
+          if [ "$missing" -eq 1 ]; then
+            echo "Build verification failed — missing expected files"
+            exit 1
+          fi
+          echo "Build verification passed"
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy app/brookebrodack-site/dist/browser --project-name=brookebrodack
+
+      # Post-deploy smoke test — verify live site returns 200
+      - name: Smoke test live site
+        run: |
+          echo "Waiting 15s for deployment to propagate..."
+          sleep 15
+          routes=("/" "/brookers" "/content" "/site" "/store" "/robots.txt" "/rss" "/sitemap.xml")
+          failed=0
+          for route in "${routes[@]}"; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "https://brookebrodack.net${route}")
+            if [ "$status" -eq 200 ]; then
+              echo "OK ($status): ${route}"
+            else
+              echo "FAIL ($status): ${route}"
+              failed=1
+            fi
+          done
+          if [ "$failed" -eq 1 ]; then
+            echo "Smoke test failed — one or more routes did not return 200"
+            exit 1
+          fi
+          echo "Smoke test passed"
