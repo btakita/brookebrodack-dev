@@ -1,29 +1,29 @@
 {
-  "name": "@btakita/brookebrodack-dev",
-  "type": "module",
-  "version": "0.0.0",
-  "scripts": {
-    "build": "cd ./app/brookebrodack-site && bun run build",
-    "clear": "cd ./app/brookebrodack-site && bun clear",
-    "dev": "cd ./app/brookebrodack-site && bun dev",
-    "start": "cd ./app/brookebrodack-site && bun start"
-  },
-  "devDependencies": {
-    "@btakita/-brookebrodack-dev-bin": "workspace:*",
-    "@btakita/dev-bin": "workspace:*",
-    "@changesets/cli": "^2.27.7",
-    "@ctx-core/monorepo": "^21.4.147",
-    "@typescript-eslint/eslint-plugin": "^7.16.0",
-    "@typescript-eslint/parser": "^7.16.0",
-    "broken-link-checker": "^0.7.8",
-    "bun-types": "latest",
-    "eslint": "^9.7.0"
-  },
-  "peerDependencies": {
-    "typescript": "^5.5.3"
-  },
-  "workspaces": [
-    "app/*",
-    "lib/*"
-  ]
+	"name": "@btakita/brookebrodack-dev",
+	"type": "module",
+	"version": "0.0.0",
+	"scripts": {
+		"build": "cd ./app/brookebrodack-site && bun run build",
+		"clear": "cd ./app/brookebrodack-site && bun clear",
+		"dev": "cd ./app/brookebrodack-site && bun dev",
+		"start": "cd ./app/brookebrodack-site && bun start"
+	},
+	"devDependencies": {
+		"@btakita/-brookebrodack-dev-bin": "workspace:*",
+		"@btakita/dev-bin": "^0.1.0",
+		"@changesets/cli": "^2.27.7",
+		"@ctx-core/monorepo": "^21.4.147",
+		"@typescript-eslint/eslint-plugin": "^7.16.0",
+		"@typescript-eslint/parser": "^7.16.0",
+		"broken-link-checker": "^0.7.8",
+		"bun-types": "latest",
+		"eslint": "^9.7.0"
+	},
+	"peerDependencies": {
+		"typescript": "^5.5.3"
+	},
+	"workspaces": [
+		"app/*",
+		"lib/*"
+	]
 }

@@ -2,75 +2,25 @@
 	branch = main
 	path = app/brookebrodack-site
 	url = git@github.com:btakita/brookebrodack-site.git
-[submodule "lib/dev-bin"]
-	path = lib/dev-bin
-	url = git@github.com:btakita/dev-bin.git
-[submodule "lib/domain--any--blog"]
-	branch = main
-	path = lib/domain--any--blog
-	url = git@github.com:btakita/domain--any--blog.git
 [submodule "lib/domain--any--brookebrodack"]
 	branch = main
 	path = lib/domain--any--brookebrodack
 	url = git@github.com:btakita/domain--any--brookebrodack.git
-[submodule "lib/domain--browser"]
-	path = lib/domain--browser
-	url = git@github.com:rappstack/domain--browser.git
 [submodule "lib/domain--browser--brookebrodack"]
 	branch = main
 	path = lib/domain--browser--brookebrodack
 	url = git@github.com:btakita/domain--browser--brookebrodack.git
-[submodule "lib/domain--server"]
-	path = lib/domain--server
-	url = git@github.com:rappstack/domain--server.git
-[submodule "lib/domain--server--auth"]
-	path = lib/domain--server--auth
-	url = git@github.com:rappstack/domain--server--auth.git
-[submodule "lib/domain--server--blog"]
-	branch = main
-	path = lib/domain--server--blog
-	url = git@github.com:btakita/domain--server--blog.git
 [submodule "lib/domain--server--brookebrodack"]
 	path = lib/domain--server--brookebrodack
 	url = git@github.com:btakita/domain--server--brookebrodack.git
-[submodule "lib/domain--server--youtube"]
-	path = lib/domain--server--youtube
-	url = git@github.com:rappstack/domain--server--youtube.git
-[submodule "lib/esmcss"]
-	branch = main
-	path = lib/esmcss
-	url = git@github.com:esmcss/esmcss.git
-[submodule "lib/snippet--rappstack"]
-	path = lib/snippet--rappstack
-	url = git@github.com:btakita/snippet--rappstack.git
-[submodule "lib/ui--any"]
-	path = lib/ui--any
-	url = git@github.com:rappstack/ui--any.git
-[submodule "lib/ui--any--blog"]
-	branch = main
-	path = lib/ui--any--blog
-	url = git@github.com:btakita/ui--any--blog.git
 [submodule "lib/ui--any--brookebrodack"]
 	branch = main
 	path = lib/ui--any--brookebrodack
 	url = git@github.com:btakita/ui--any--brookebrodack.git
-[submodule "lib/ui--browser"]
-	path = lib/ui--browser
-	url = git@github.com:rappstack/ui--browser.git
 [submodule "lib/ui--browser--brookebrodack"]
 	branch = main
 	path = lib/ui--browser--brookebrodack
 	url = git@github.com:btakita/ui--browser--brookebrodack.git
-[submodule "lib/ui--browser--semantic"]
-	path = lib/ui--browser--semantic
-	url = git@github.com:rappstack/ui--browser--semantic.git
-[submodule "lib/ui--server"]
-	path = lib/ui--server
-	url = git@github.com:rappstack/ui--server.git
-[submodule "lib/ui--server--blog"]
-	branch = main
-	path = lib/ui--server--blog
-	url = git@github.com:btakita/ui--server--blog.git
 [submodule "lib/ui--server--brookebrodack"]
 	branch = main
 	path = lib/ui--server--brookebrodack
