@@ -115,7 +115,7 @@ jobs:
           routes=("/" "/brookers" "/content" "/site" "/store" "/robots.txt" "/rss" "/sitemap.xml")
           failed=0
           for route in "${routes[@]}"; do
-            status=$(curl -s -o /dev/null -w "%{http_code}" "https://brookebrodack.net${route}")
+            status=$(curl -sL -o /dev/null -w "%{http_code}" "https://brookebrodack.net${route}")
             if [ "$status" -eq 200 ]; then
               echo "OK ($status): ${route}"
             else
