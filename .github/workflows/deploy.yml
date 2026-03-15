@@ -131,4 +131,16 @@ jobs:
             echo "Smoke test failed — one or more routes did not return 200"
             exit 1
           fi
+          # Asset smoke test
+          status=$(curl -sfL -o /dev/null -w "%{http_code}" "https://assets.brookebrodack.net/images/brooke-brodack-logo.jpg")
+          if [ "$status" != "200" ]; then
+            echo "FAIL ($status): asset image check"
+            failed=1
+          else
+            echo "OK ($status): https://assets.brookebrodack.net/images/brooke-brodack-logo.jpg"
+          fi
+          if [ "$failed" -eq 1 ]; then
+            echo "Smoke test failed"
+            exit 1
+          fi
           echo "Smoke test passed"
