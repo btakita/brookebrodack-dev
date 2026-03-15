@@ -25,5 +25,8 @@
 	"workspaces": [
 		"app/*",
 		"lib/*"
-	]
+	],
+	"resolutions": {
+		"rebuildjs": "0.71.0"
+	}
 }
