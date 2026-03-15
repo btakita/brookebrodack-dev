@@ -51,11 +51,14 @@ jobs:
         run: bun run build
         env:
           NODE_ENV: production
-          ASSET_BASE_URL: ${{ secrets.ASSET_BASE_URL }}
+          ASSET_BASE_URL: https://brookebrodack.net
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           YOUTUBE_CHANNELID: ${{ secrets.YOUTUBE_CHANNELID }}
           YOUTUBE_RSS_URL: ${{ secrets.YOUTUBE_RSS_URL }}
 
+      # Copy assets with content-hashed filenames into static output
+      - name: Hash-copy assets
+        run: sh app/-brookebrodack-dev-bin/bin/assets--hash-copy.sh public/assets app/brookebrodack-site/dist/browser
 
       # Pre-render all routes to static HTML
       - name: Static export
