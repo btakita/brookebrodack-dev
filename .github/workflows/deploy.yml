@@ -58,7 +58,7 @@ jobs:
 
       # Copy assets with content-hashed filenames into static output
       - name: Hash-copy assets
-        run: sh app/-brookebrodack-dev-bin/bin/assets--hash-copy.sh public/assets app/brookebrodack-site/dist/browser
+        run: bash app/-brookebrodack-dev-bin/bin/assets--hash-copy.sh public/assets app/brookebrodack-site/dist/browser
 
       # Pre-render all routes to static HTML
       - name: Static export

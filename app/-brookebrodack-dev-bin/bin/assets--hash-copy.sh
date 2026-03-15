@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Copy assets from public/assets/ to dist/browser/ with content-hashed filenames.
 # Matches the naming scheme used by esbuild-plugin-object-store-asset:
 #   {name}-{SHA256_8_UPPER}{ext}
