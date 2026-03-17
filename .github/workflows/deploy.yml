@@ -22,7 +22,13 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
 
-      - run: bun install --frozen-lockfile --ignore-scripts
+      # Replace local yalc paths with npm versions for CI
+      - name: Resolve yalc dependencies to npm
+        run: |
+          sed -i 's|"file:\.yalc/@rappstack/[^"]*"|"^0.1.0"|g' package.json
+          rm -f bun.lock
+
+      - run: bun install --ignore-scripts
 
       # Download assets from Contabo S3 (gitignored, needed at build time)
       - name: Download assets
