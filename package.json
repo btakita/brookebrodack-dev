@@ -9,6 +9,7 @@
 		"start": "cd ./app/brookebrodack-site && bun start"
 	},
 	"devDependencies": {
+		"@anthropic-ai/sdk": "^0.79.0",
 		"@btakita/-brookebrodack-dev-bin": "workspace:*",
 		"@btakita/dev-bin": "^0.1.0",
 		"@changesets/cli": "^2.27.7",

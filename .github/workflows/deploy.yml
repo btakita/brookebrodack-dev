@@ -45,6 +45,37 @@ jobs:
           YOUTUBE_CHANNELID: ${{ secrets.YOUTUBE_CHANNELID }}
           YOUTUBE_RSS_URL: ${{ secrets.YOUTUBE_RSS_URL }}
 
+      # Generate blog posts for new YouTube videos
+      - name: Install transcription tools
+        run: |
+          pip install --quiet openai-whisper yt-dlp
+          bun add -d @anthropic-ai/sdk
+
+      - name: Generate posts for new videos
+        id: generate_posts
+        run: |
+          cd app/brookebrodack-site
+          set +e
+          bun scripts/generate-posts.ts
+          exit_code=$?
+          set -e
+          echo "exit_code=$exit_code" >> "$GITHUB_OUTPUT"
+          if [ "$exit_code" -eq 255 ]; then
+            echo "generate-posts failed fatally"
+            exit 1
+          fi
+          echo "Generated $exit_code new post(s)"
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Commit and push new posts
+        if: steps.generate_posts.outputs.exit_code != '0'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add app/brookebrodack-site/post/content/ app/brookebrodack-site/post/index.ts app/brookebrodack-site/public/transcripts/
+          git commit -m "feat: auto-generate blog posts for new YouTube videos"
+          git push
 
       # Build browser + server bundles
       - name: Build
