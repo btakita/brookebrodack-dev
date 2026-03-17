@@ -8,3 +8,5 @@ letsencrypt
 tmp
 *.iml
 .agent-doc/
+.yalc/
+yalc.lock

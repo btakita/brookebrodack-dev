@@ -29,6 +29,28 @@
 		"lib/*"
 	],
 	"resolutions": {
-		"rebuildjs": "0.71.0"
+		"rebuildjs": "0.71.0",
+		"@rappstack/domain--any--blog": "file:.yalc/@rappstack/domain--any--blog",
+		"@rappstack/domain--browser": "file:.yalc/@rappstack/domain--browser",
+		"@rappstack/domain--server": "file:.yalc/@rappstack/domain--server",
+		"@rappstack/domain--server--auth": "file:.yalc/@rappstack/domain--server--auth",
+		"@rappstack/domain--server--blog": "file:.yalc/@rappstack/domain--server--blog",
+		"@rappstack/domain--server--youtube": "file:.yalc/@rappstack/domain--server--youtube",
+		"@rappstack/ui--any": "file:.yalc/@rappstack/ui--any",
+		"@rappstack/ui--any--blog": "file:.yalc/@rappstack/ui--any--blog",
+		"@rappstack/ui--server": "file:.yalc/@rappstack/ui--server",
+		"@rappstack/ui--server--blog": "file:.yalc/@rappstack/ui--server--blog"
+	},
+	"dependencies": {
+		"@rappstack/domain--any--blog": "file:.yalc/@rappstack/domain--any--blog",
+		"@rappstack/domain--browser": "file:.yalc/@rappstack/domain--browser",
+		"@rappstack/domain--server": "file:.yalc/@rappstack/domain--server",
+		"@rappstack/domain--server--auth": "file:.yalc/@rappstack/domain--server--auth",
+		"@rappstack/domain--server--blog": "file:.yalc/@rappstack/domain--server--blog",
+		"@rappstack/domain--server--youtube": "file:.yalc/@rappstack/domain--server--youtube",
+		"@rappstack/ui--any": "file:.yalc/@rappstack/ui--any",
+		"@rappstack/ui--any--blog": "file:.yalc/@rappstack/ui--any--blog",
+		"@rappstack/ui--server": "file:.yalc/@rappstack/ui--server",
+		"@rappstack/ui--server--blog": "file:.yalc/@rappstack/ui--server--blog"
 	}
 }
