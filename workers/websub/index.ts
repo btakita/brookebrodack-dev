@@ -13,6 +13,14 @@
  * - GH_OWNER: GitHub repo owner
  * - GH_REPO: GitHub repo name
  * - GH_WORKFLOW: Workflow filename (e.g., "deploy.yml")
+ * - NOTIFICATION_EMAIL: Recipient email for new video alerts
+ * - FROM_EMAIL: Sender email address
+ *
+ * DNS setup for Mailchannels:
+ * Add a TXT record for the sender domain (brookebrodack.net):
+ *   _mailchannels.brookebrodack.net  TXT  "v=mc1 cfid=brookebrodack-websub.brian-takita.workers.dev"
+ * Add an SPF record if not already present:
+ *   brookebrodack.net  TXT  "v=spf1 include:relay.mailchannels.net -all"
  */
 export interface Env {
 	GH_TOKEN: string
@@ -21,6 +29,14 @@ export interface Env {
 	GH_REPO: string
 	GH_WORKFLOW: string
 	YOUTUBE_CHANNELID: string
+	NOTIFICATION_EMAIL: string
+	FROM_EMAIL: string
+}
+interface VideoInfo {
+	videoId: string
+	title: string
+	channelTitle: string
+	publishedAt: string
 }
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
@@ -104,6 +120,15 @@ async function handle_notification(request: Request, env: Env): Promise<Response
 		}
 	}
 	console.info(`WebSub notification received (${body.length} bytes)`)
+	// Parse video details from Atom XML and send email notification
+	const video = parse_atom_xml(body)
+	if (video) {
+		try {
+			await send_email_notification(env, video)
+		} catch (err) {
+			console.error('Email notification error:', err)
+		}
+	}
 	// Trigger GitHub Actions workflow_dispatch
 	try {
 		const gh_url =
@@ -135,6 +160,77 @@ async function handle_notification(request: Request, env: Env): Promise<Response
 	}
 	// Always return 200 to acknowledge receipt
 	return new Response('OK', { status: 200 })
+}
+/**
+ * Parse YouTube Atom XML feed to extract video details.
+ * YouTube WebSub pushes a single <entry> element with video info.
+ */
+function parse_atom_xml(xml: string): VideoInfo | null {
+	const get_tag = (tag: string): string => {
+		const match = xml.match(new RegExp(`<${tag}[^>]*>([^<]+)</${tag}>`))
+		return match?.[1] ?? ''
+	}
+	const videoId_match = xml.match(/<yt:videoId>([^<]+)<\/yt:videoId>/)
+	if (!videoId_match) {
+		console.warn('Could not parse videoId from Atom XML')
+		return null
+	}
+	return {
+		videoId: videoId_match[1],
+		title: get_tag('title'),
+		channelTitle: get_tag('name'),
+		publishedAt: get_tag('published'),
+	}
+}
+/**
+ * Send email notification about a new YouTube video via Mailchannels API.
+ * Mailchannels authenticates via Cloudflare Worker origin (no API key needed).
+ */
+async function send_email_notification(env: Env, video: VideoInfo): Promise<void> {
+	const video_url = `https://www.youtube.com/watch?v=${video.videoId}`
+	const thumbnail_url = `https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg`
+	const published = video.publishedAt
+		? new Date(video.publishedAt).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' })
+		: 'Unknown'
+	const html_body = `
+<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h2 style="color: #1a1a1a; margin-bottom: 4px;">${escape_html(video.title)}</h2>
+  <p style="color: #666; margin-top: 0;">by ${escape_html(video.channelTitle)} &middot; ${published}</p>
+  <a href="${video_url}" style="display: block; margin: 16px 0;">
+    <img src="${thumbnail_url}" alt="Video thumbnail" style="width: 100%; max-width: 480px; border-radius: 8px;" />
+  </a>
+  <p>
+    <a href="${video_url}" style="display: inline-block; padding: 10px 20px; background: #ff0000; color: #fff; text-decoration: none; border-radius: 4px; font-weight: 600;">
+      Watch on YouTube
+    </a>
+  </p>
+  <p style="color: #999; font-size: 13px; margin-top: 24px;">
+    A blog post will be auto-generated after transcription completes.
+  </p>
+</div>`.trim()
+	const response = await fetch('https://api.mailchannels.net/tx/v1/send', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({
+			personalizations: [{ to: [{ email: env.NOTIFICATION_EMAIL }] }],
+			from: { email: env.FROM_EMAIL, name: 'Brooke Brodack Updates' },
+			subject: `New Brooke Brodack video: ${video.title}`,
+			content: [{ type: 'text/html', value: html_body }],
+		}),
+	})
+	if (!response.ok) {
+		const error_text = await response.text()
+		console.error(`Mailchannels send failed: ${response.status} ${error_text}`)
+	} else {
+		console.info(`Email notification sent to ${env.NOTIFICATION_EMAIL}`)
+	}
+}
+function escape_html(str: string): string {
+	return str
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
 }
 /**
  * Verify HMAC-SHA1 signature from the WebSub hub.

@@ -10,6 +10,8 @@ GH_OWNER = "btakita"
 GH_REPO = "brookebrodack-dev"
 GH_WORKFLOW = "deploy.yml"
 YOUTUBE_CHANNELID = "UCO42ciP_nkDcOlATRjLXCqQ"
+NOTIFICATION_EMAIL = "brian@briantakita.me"
+FROM_EMAIL = "notifications@brookebrodack.net"
 
 # Secrets (set via `wrangler secret put`):
 # - GH_TOKEN: GitHub PAT with actions:write scope
