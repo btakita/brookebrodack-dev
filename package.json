@@ -13,11 +13,13 @@
 		"@btakita/dev-bin": "^0.1.0",
 		"@changesets/cli": "^2.27.7",
 		"@ctx-core/monorepo": "^21.4.147",
+		"@types/js-yaml": "^4.0.9",
 		"@typescript-eslint/eslint-plugin": "^7.16.0",
 		"@typescript-eslint/parser": "^7.16.0",
 		"broken-link-checker": "^0.7.8",
 		"bun-types": "latest",
-		"eslint": "^9.7.0"
+		"eslint": "^9.7.0",
+		"js-yaml": "^4.1.1"
 	},
 	"peerDependencies": {
 		"typescript": "^5.5.3"
