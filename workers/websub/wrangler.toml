@@ -3,7 +3,15 @@ main = "index.ts"
 compatibility_date = "2024-12-01"
 
 [triggers]
-crons = ["0 0 */7 * *"]  # Re-subscribe every 7 days
+# Verify a stored live stream is still live every 5 min; re-subscribe weekly.
+crons = ["*/5 * * * *", "0 0 */7 * *"]
+
+[[kv_namespaces]]
+# Holds the current live-stream status. Create with:
+#   wrangler kv namespace create LIVE
+# then paste the returned id below.
+binding = "LIVE"
+id = "188a89cb05ff46978f6b46a740215285"
 
 [vars]
 GH_OWNER = "btakita"
@@ -16,3 +24,4 @@ FROM_EMAIL = "notifications@brookebrodack.net"
 # Secrets (set via `wrangler secret put`):
 # - GH_TOKEN: GitHub PAT with actions:write scope
 # - WEBSUB_SECRET: Shared secret for HMAC verification
+# - GOOGLE_API_KEY: Google API key with YouTube Data API v3 enabled (videos.list for live status)

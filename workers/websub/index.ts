@@ -16,6 +16,15 @@
  * - NOTIFICATION_EMAIL: Recipient email for new video alerts
  * - FROM_EMAIL: Sender email address
  *
+ * Live indicator (near-zero quota, WebSub-driven):
+ * - POST (WebSub push) or cron -> 1-unit videos.list on the videoId to read
+ *   liveBroadcastContent; stores {videoId,title} in the LIVE KV namespace when
+ *   live, clears it when the stream ends.
+ * - GET /live -> reads KV only (0 units); returns { live, videoId?, title? }.
+ *   Edge-cached LIVE_CACHE_TTL_SECONDS to coalesce visitor polls.
+ * - Cron (every 5 min) confirms a stored live video is still live.
+ * CORS is open (the static site is served from a different origin).
+ *
  * DNS setup for Mailchannels:
  * Add a TXT record for the sender domain (brookebrodack.net):
  *   _mailchannels.brookebrodack.net  TXT  "v=mc1 cfid=brookebrodack-websub.brian-takita.workers.dev"
@@ -31,6 +40,9 @@ export interface Env {
 	YOUTUBE_CHANNELID: string
 	NOTIFICATION_EMAIL: string
 	FROM_EMAIL: string
+	GOOGLE_API_KEY: string
+	/** KV namespace holding the current live-stream status (key: 'live'). */
+	LIVE: KVNamespace
 }
 interface VideoInfo {
 	videoId: string
@@ -39,18 +51,25 @@ interface VideoInfo {
 	publishedAt: string
 }
 export default {
-	async fetch(request: Request, env: Env): Promise<Response> {
+	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		const url = new URL(request.url)
+		if (url.pathname === '/live') {
+			return handle_live(request, env, ctx)
+		}
 		if (request.method === 'GET') {
 			return handle_verification(url)
 		}
 		if (request.method === 'POST') {
-			return handle_notification(request, env)
+			return handle_notification(request, env, ctx)
 		}
 		return new Response('Method not allowed', { status: 405 })
 	},
-	async scheduled(_event: ScheduledEvent, env: Env, _ctx: ExecutionContext): Promise<void> {
-		await renew_subscription(env)
+	async scheduled(event: ScheduledEvent, env: Env, _ctx: ExecutionContext): Promise<void> {
+		if (event.cron === '0 0 */7 * *') {
+			await renew_subscription(env)
+		} else {
+			await verify_live_status(env)
+		}
 	},
 }
 /**
@@ -100,11 +119,139 @@ function handle_verification(url: URL): Response {
 	return new Response('Unknown mode', { status: 400 })
 }
 /**
+ * Live-stream indicator endpoint.
+ * Returns { live, videoId?, title? } from the LIVE KV namespace (no API call).
+ * Edge-cached briefly to coalesce concurrent visitor polls.
+ */
+const LIVE_CACHE_TTL_SECONDS = 30
+interface LiveStatus { live:boolean; videoId?:string; title?:string }
+async function handle_live(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+	if (request.method === 'OPTIONS') {
+		return new Response(null, { status: 204, headers: cors_headers() })
+	}
+	const cors = cors_headers()
+	const cache = caches.default
+	const cache_key = live_cache_key(request)
+	const cached = await cache.match(cache_key)
+	if (cached) {
+		return rehydrate(cached, cors)
+	}
+	const status = await live__get(env)
+	const body = json_response(status, cors, LIVE_CACHE_TTL_SECONDS)
+	ctx.waitUntil(cache.put(cache_key, body.clone()))
+	return body
+}
+const KV_KEY_LIVE = 'live'
+interface LiveRecord { videoId:string; title?:string }
+/** Read current live status from KV. Returns { live:false } if none/unconfigured. */
+async function live__get(env: Env): Promise<LiveStatus> {
+	if (!env.LIVE) return { live: false }
+	const raw = await env.LIVE.get(KV_KEY_LIVE)
+	if (!raw) return { live: false }
+	try {
+		const parsed = JSON.parse(raw) as LiveRecord
+		if (parsed.videoId) return { live: true, videoId: parsed.videoId, title: parsed.title }
+	} catch (err) {
+		console.error('live__get parse error:', err)
+	}
+	return { live: false }
+}
+/** Store the active stream. expirationTtl is a safety net in case pings/cron stop. */
+async function live__set(env: Env, videoId: string, title?: string): Promise<void> {
+	if (!env.LIVE) return
+	await env.LIVE.put(KV_KEY_LIVE, JSON.stringify({ videoId, title } satisfies LiveRecord), {
+		expirationTtl: 6 * 60 * 60,
+	})
+}
+async function live__clear(env: Env): Promise<void> {
+	if (!env.LIVE) return
+	await env.LIVE.delete(KV_KEY_LIVE)
+}
+/**
+ * 1-unit videos.list on a videoId to read liveBroadcastContent + title.
+ * Returns null if the API is unavailable (caller leaves existing state).
+ */
+async function videos__live_status(
+	env: Env, videoId: string,
+): Promise<{ live:boolean, title?:string }|null> {
+	if (!env.GOOGLE_API_KEY) return null
+	const api_url =
+		`https://www.googleapis.com/youtube/v3/videos`
+		+ `?part=snippet&id=${encodeURIComponent(videoId)}`
+		+ `&key=${encodeURIComponent(env.GOOGLE_API_KEY)}`
+	const response = await fetch(api_url)
+	if (!response.ok) {
+		console.warn(`videos.list ${videoId}: ${response.status}`)
+		return null
+	}
+	const data = await response.json() as {
+		items?: { snippet?: { title?:string, liveBroadcastContent?:string } }[]
+	}
+	const item = data.items?.[0]
+	if (!item) return { live: false }
+	return {
+		live: item.snippet?.liveBroadcastContent === 'live',
+		title: item.snippet?.title,
+	}
+}
+/** Called on WebSub push: set live if broadcasting, clear if this video ended. */
+async function live_status__refresh(env: Env, videoId: string): Promise<void> {
+	const status = await videos__live_status(env, videoId)
+	if (!status) return
+	if (status.live) {
+		await live__set(env, videoId, status.title)
+	} else if ((await live__get(env)).videoId === videoId) {
+		await live__clear(env)
+	}
+}
+/** Cron: confirm a stored live stream is still live (1 unit only when one is set). */
+async function verify_live_status(env: Env): Promise<void> {
+	const current = await live__get(env)
+	if (!current.videoId) return
+	const status = await videos__live_status(env, current.videoId)
+	if (!status || !status.live) {
+		await live__clear(env)
+	} else if (status.title && status.title !== current.title) {
+		await live__set(env, current.videoId, status.title)
+	}
+}
+function live_cache_key(request: Request): Request {
+	const url = new URL(request.url)
+	url.search = ''
+	return new Request(url.toString(), { method: 'GET' })
+}
+function cors_headers(): Record<string, string> {
+	return {
+		'Access-Control-Allow-Origin': '*',
+		'Access-Control-Allow-Methods': 'GET, OPTIONS',
+		'Access-Control-Max-Age': '86400',
+		'Vary': 'Origin',
+	}
+}
+function json_response(
+	status: LiveStatus,
+	cors: Record<string, string>,
+	max_age?: number,
+): Response {
+	const headers: Record<string, string> = {
+		'Content-Type': 'application/json; charset=utf-8',
+		...cors,
+	}
+	if (max_age !== undefined) {
+		headers['Cache-Control'] = `public, max-age=${max_age}, s-maxage=${max_age}`
+	}
+	return new Response(JSON.stringify(status), { headers })
+}
+async function rehydrate(cached: Response, cors: Record<string, string>): Promise<Response> {
+	const status = await cached.json() as LiveStatus
+	return json_response(status, cors)
+}
+/**
  * WebSub push notification handler.
  * The hub sends a POST with Atom XML body and X-Hub-Signature header.
  * We verify the HMAC and trigger a GitHub Actions workflow_dispatch.
  */
-async function handle_notification(request: Request, env: Env): Promise<Response> {
+async function handle_notification(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 	const body = await request.text()
 	// Verify HMAC signature if secret is configured
 	const signature = request.headers.get('X-Hub-Signature')
@@ -128,6 +275,8 @@ async function handle_notification(request: Request, env: Env): Promise<Response
 		} catch (err) {
 			console.error('Email notification error:', err)
 		}
+		// Refresh live status from this push (1-unit videos.list); don't block the hub ack
+		ctx.waitUntil(live_status__refresh(env, video.videoId))
 	}
 	// Trigger GitHub Actions workflow_dispatch
 	try {
