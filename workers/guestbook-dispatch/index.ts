@@ -122,6 +122,32 @@ export function decision_a1_(result:unknown, entry_id_a1:number[]):decision_T[] 
 	}
 	return out
 }
+/**
+ * Identity of the panel behind a connection, derived from what it advertised.
+ *
+ * An escalated entry is skipped only for the panel that escalated it, so this
+ * has to change whenever the panel's composition changes — otherwise adding a
+ * model plugin would inherit the rules-only panel's escalations and the new
+ * plugin would never see the entries it was added to judge. Sorted so the same
+ * set of plugins is the same panel however the host happens to list them.
+ */
+export function panel_id__of(ws:WebSocket):string|null {
+	try {
+		const attached = ws.deserializeAttachment() as { panel_id?:unknown }|null
+		return typeof attached?.panel_id === 'string' ? attached.panel_id : null
+	} catch {
+		// A socket from before this code shipped has no attachment. Reading as
+		// "panel unknown" is the safe end: nothing is excluded, so the worst
+		// case is the old re-judging behaviour rather than an entry no panel
+		// ever sees.
+		return null
+	}
+}
+export function panel_id_(plugin_id_a1:unknown) {
+	if (!Array.isArray(plugin_id_a1)) return null
+	const ids = plugin_id_a1.filter((id):id is string=>typeof id === 'string' && id.length > 0)
+	return ids.length ? [...ids].sort().join('+') : null
+}
 /** Jobs the edge has handed out and is still waiting on. */
 type claim_T = {
 	entry_id_a1:number[]
@@ -162,6 +188,10 @@ export class freehold_hub_C implements DurableObject {
 		if (!frame) return
 		switch (frame.type) {
 			case 'hello': {
+				// Attached rather than held in a field: the DO hibernates
+				// between jobs, and an attachment survives that where instance
+				// state does not.
+				ws.serializeAttachment({ panel_id: panel_id_(frame.plugin_ids) })
 				// Accept, then drain whatever accumulated while nobody was
 				// connected — a host that comes back after a laptop sleep
 				// should not wait for the next submission.
@@ -192,7 +222,7 @@ export class freehold_hub_C implements DurableObject {
 					return
 				}
 				const decision_a1 = decision_a1_(frame.result?.result, claim.entry_id_a1)
-				await decision_a1__apply(this.#env.DB, decision_a1)
+				await decision_a1__apply(this.#env.DB, decision_a1, panel_id__of(ws) ?? undefined)
 				await this.#state.storage.delete(`claim:${job_id}`)
 				return
 			}
@@ -242,14 +272,20 @@ export class freehold_hub_C implements DurableObject {
 		const claims = await this.#state.storage.list<claim_T>({ prefix: 'claim:' })
 		const in_flight = new Set<number>()
 		for (const [, claim] of claims) for (const id of claim.entry_id_a1) in_flight.add(id)
+		// Entries this panel already declined to judge are not offered again.
+		// Without this the hub re-offers them on every notify and every alarm
+		// and the panel re-judges them forever; the filter is on THIS panel, so
+		// a different one still gets its first look.
+		const panel_id = panel_id__of(socket_a1[0]!)
 		const { results } = await this.#env.DB
 			.prepare(
 				`SELECT id, name, message, create_dts
 				 FROM guestbook_entry
 				 WHERE status = 'pending' AND deleted_at IS NULL
+				   AND (escalated_by IS NULL OR escalated_by IS NOT ?)
 				 ORDER BY id
 				 LIMIT ?`)
-			.bind(job__batch_size + in_flight.size)
+			.bind(panel_id, job__batch_size + in_flight.size)
 			.all<pending_entry_T>()
 		const entry_a1 = (results ?? [])
 			.filter((entry)=>!in_flight.has(entry.id))

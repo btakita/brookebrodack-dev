@@ -112,19 +112,29 @@ EOF`)
 describe('worker scheduled moderate()', ()=>{
 	/** Minimal D1 stand-in: records bound UPDATEs instead of running them. */
 	function db__stub(pending:typeof batch) {
+		// `applied` is status changes only. Recording an escalation is also an
+		// UPDATE, but it publishes nothing — keeping the two apart is what lets
+		// "escalating writes no status" stay assertable now that an escalation
+		// leaves a trace.
 		const applied:unknown[][] = []
+		const escalated:unknown[][] = []
 		const db = {
 			prepare(sql:string) {
 				const stmt = {
 					_bind: [] as unknown[],
-					bind(...a:unknown[]) { stmt._bind = a; if (sql.includes('UPDATE')) applied.push(a); return stmt },
+					bind(...a:unknown[]) {
+						stmt._bind = a
+						if (sql.includes('SET status')) applied.push(a)
+						else if (sql.includes('SET escalated_at')) escalated.push(a)
+						return stmt
+					},
 					all: async()=>({ results: pending }),
 				}
 				return stmt
 			},
 			batch: async()=>[],
 		}
-		return { db, applied }
+		return { db, applied, escalated }
 	}
 	function openai__stub(body:unknown, ok = true) {
 		globalThis.fetch = (async()=>new Response(JSON.stringify(body), {
@@ -150,13 +160,17 @@ describe('worker scheduled moderate()', ()=>{
 		expect(applied[0]![0]).toBe('approved')
 		expect(applied[1]![0]).toBe('rejected')
 	})
-	it('escalates and writes nothing when OpenAI fails', async()=>{
+	it('escalates without publishing, and records that this panel declined', async()=>{
 		const { moderate } = await import('../workers/guestbook-moderate/index.ts')
-		const { db, applied } = db__stub(batch)
+		const { db, applied, escalated } = db__stub(batch)
 		openai__stub({ error: { message: 'upstream boom' } }, false)
 		const out = await moderate({ DB: db as never, OPENAI_API_KEY: 'k' })
 		expect(out.escalated).toBe(2)
 		expect(applied.length).toBe(0)
+		// Without the record the sweep re-judges these two every 15 minutes for
+		// as long as they sit in the queue — a bill once a model is answering.
+		expect(escalated.length).toBe(2)
+		for (const bound of escalated) expect(bound[0]).toBe('cron:openai:default')
 	})
 	it('does nothing at all without a key', async()=>{
 		const { moderate } = await import('../workers/guestbook-moderate/index.ts')

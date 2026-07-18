@@ -7,6 +7,7 @@ import {
 	bearer_,
 	decision_a1_,
 	frame_,
+	panel_id_,
 	secret__matches,
 } from '../workers/guestbook-dispatch/index.ts'
 import { decision_a1__apply } from '../scripts/_lib/guestbook-moderation.ts'
@@ -99,8 +100,47 @@ function db_() {
 	}
 }
 
+describe('panel identity', ()=>{
+	test('the same plugins are the same panel however they are listed', ()=>{
+		expect(panel_id_(['agent', 'rules'])).toBe(panel_id_(['rules', 'agent']))
+	})
+	test('a different set of plugins is a different panel', ()=>{
+		// Otherwise adding a model plugin would inherit the rules-only panel's
+		// escalations and never see the entries it was added to judge.
+		expect(panel_id_(['rules'])).not.toBe(panel_id_(['rules', 'agent']))
+	})
+	test('an unusable advert is no panel rather than a made-up one', ()=>{
+		// A bogus id would exclude entries from a panel that never saw them,
+		// which is worse than the re-judging loop it is meant to prevent.
+		expect(panel_id_(null)).toBeNull()
+		expect(panel_id_([])).toBeNull()
+		expect(panel_id_('rules')).toBeNull()
+		expect(panel_id_([1, {}, ''])).toBeNull()
+	})
+})
+
 describe('applying decisions', ()=>{
-	test('escalate writes nothing', async ()=>{
+	test('escalate never changes status', async ()=>{
+		const db = db_()
+		const tally = await decision_a1__apply(db as never, [
+			{ id: 1, decision: 'escalate', reason: 'unsure' },
+		], 'rules')
+		expect(tally.escalate).toBe(1)
+		for (const sql of db.sql_a1) expect(sql).not.toContain('SET status')
+	})
+	test('escalate records which panel declined, guarded on pending', async ()=>{
+		// The record is what stops the hub re-offering the entry to this same
+		// panel on every notify and every alarm, forever.
+		const db = db_()
+		await decision_a1__apply(db as never, [
+			{ id: 1, decision: 'escalate', reason: 'unsure' },
+		], 'agent+rules')
+		expect(db.sql_a1.length).toBe(1)
+		expect(db.sql_a1[0]!).toContain('escalated_by')
+		expect(db.sql_a1[0]!).toContain("status = 'pending'")
+		expect(db.bound[0]).toEqual(['agent+rules', 1])
+	})
+	test('a caller that cannot name its panel records nothing', async ()=>{
 		const db = db_()
 		const tally = await decision_a1__apply(db as never, [
 			{ id: 1, decision: 'escalate', reason: 'unsure' },

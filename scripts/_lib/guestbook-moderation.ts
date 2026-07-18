@@ -256,18 +256,38 @@ export function text__json(text:string) {
  * and the freehold dispatch hub — so the two guards below exist once instead
  * of three times:
  *
- * - `escalate` writes nothing. An entry nobody was confident about stays
- *   pending for a human; that is the whole point of the vocabulary.
+ * - `escalate` never changes status. An entry nobody was confident about stays
+ *   pending for a human; that is the whole point of the vocabulary. It does
+ *   record *which panel* declined, when `panel_id` is given — see below.
  * - `WHERE status = 'pending'` means a decision can never re-open an entry an
  *   admin already handled, or apply twice if a verdict arrives late and a
  *   retry already landed.
+ *
+ * `panel_id` identifies the panel that judged, and is what stops an escalated
+ * entry being re-offered to that same panel forever. It is optional because a
+ * caller that cannot name its panel should record nothing rather than record
+ * something wrong: a bogus id would exclude the entry from a panel that never
+ * actually saw it, which is worse than the re-judging loop it prevents.
  */
-export async function decision_a1__apply(db:D1Database, decision_a1:decision_T[]) {
+export async function decision_a1__apply(
+	db:D1Database,
+	decision_a1:decision_T[],
+	panel_id?:string,
+) {
 	const tally = { approve: 0, reject: 0, escalate: 0 }
 	const statement_a1 = []
 	for (const decision of decision_a1) {
 		tally[decision.decision]++
-		if (decision.decision === 'escalate') continue
+		if (decision.decision === 'escalate') {
+			if (!panel_id) continue
+			statement_a1.push(db
+				.prepare(
+					`UPDATE guestbook_entry
+					 SET escalated_at = datetime('now'), escalated_by = ?
+					 WHERE id = ? AND status = 'pending'`)
+				.bind(panel_id, decision.id))
+			continue
+		}
 		statement_a1.push(db
 			.prepare(
 				`UPDATE guestbook_entry

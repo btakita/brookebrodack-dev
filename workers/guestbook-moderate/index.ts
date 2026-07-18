@@ -50,14 +50,20 @@ export async function moderate(env:env_T) {
 		return { pending: 0, approved: 0, rejected: 0, escalated: 0 }
 	}
 	const limit = Number(env.GUESTBOOK_MODERATE_LIMIT) || 200
+	// This sweep is a panel too, and it names itself by the model it asked, so
+	// changing the model gives the new one its own look at everything the old
+	// one escalated. Entries this same panel already declined to judge are not
+	// re-judged every 15 minutes for as long as they sit in the queue.
+	const panel_id = `cron:openai:${env.OPENAI_MODEL || 'default'}`
 	const { results } = await env.DB
 		.prepare(
 			`SELECT id, name, message, create_dts
 			 FROM guestbook_entry
 			 WHERE status = 'pending' AND deleted_at IS NULL
+			   AND (escalated_by IS NULL OR escalated_by IS NOT ?)
 			 ORDER BY id
 			 LIMIT ?`)
-		.bind(limit)
+		.bind(panel_id, limit)
 		.all<pending_entry_T>()
 	const pending_a1 = results ?? []
 	if (!pending_a1.length) {
@@ -70,7 +76,7 @@ export async function moderate(env:env_T) {
 		decision_a1.push(
 			...await batch__judge(pending_a1.slice(i, i + batch_size), provider_a1))
 	}
-	const tally = await decision_a1__apply(env.DB, decision_a1)
+	const tally = await decision_a1__apply(env.DB, decision_a1, panel_id)
 	console.log(
 		`guestbook-moderate: approved ${tally.approve}, rejected ${tally.reject},`
 		+ ` left for review ${tally.escalate}`)
