@@ -231,7 +231,14 @@ export class freehold_hub_C implements DurableObject {
 	 */
 	async #dispatch_pending() {
 		const socket_a1 = this.#state.getWebSockets()
-		if (!socket_a1.length) return
+		// Every early return below leaves entries pending, which is correct but
+		// indistinguishable from the outside — the visitor, the admin dashboard,
+		// and the host all just see "nothing happened". Log which reason it was,
+		// or diagnosing a quiet push path means guessing.
+		if (!socket_a1.length) {
+			console.log('dispatch: no host connected')
+			return
+		}
 		const claims = await this.#state.storage.list<claim_T>({ prefix: 'claim:' })
 		const in_flight = new Set<number>()
 		for (const [, claim] of claims) for (const id of claim.entry_id_a1) in_flight.add(id)
@@ -247,7 +254,11 @@ export class freehold_hub_C implements DurableObject {
 		const entry_a1 = (results ?? [])
 			.filter((entry)=>!in_flight.has(entry.id))
 			.slice(0, job__batch_size)
-		if (!entry_a1.length) return
+		if (!entry_a1.length) {
+			console.log(`dispatch: nothing to send (pending=${results?.length ?? 0} in_flight=${in_flight.size})`)
+			return
+		}
+		console.log(`dispatch: sending ${entry_a1.length} entry(s) to ${socket_a1.length} host(s)`)
 		const job:job_T = {
 			id: crypto.randomUUID(),
 			kind: 'moderation',
