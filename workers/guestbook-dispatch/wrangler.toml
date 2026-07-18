@@ -24,7 +24,7 @@ class_name = "freehold_hub_C"
 # billed as a running object — which for a personal guestbook is nearly always.
 [[migrations]]
 tag = "v1"
-new_classes = ["freehold_hub_C"]
+new_sqlite_classes = ["freehold_hub_C"]
 
 [[d1_databases]]
 binding = "DB"
