@@ -1,0 +1,21 @@
+# Cron-triggered guestbook moderation.
+#
+# Separate from the root wrangler.toml (the Pages project) because Pages
+# Functions cannot carry a cron trigger — a scheduled handler needs a Worker.
+# Both bind the same D1 database, so this and scripts/guestbook-moderate.ts
+# moderate the same queue.
+#
+# Secrets (`bunx wrangler secret put <NAME>` from this directory):
+#   OPENAI_API_KEY — required; without it the run logs an error and does nothing
+name = "brookebrodack-guestbook-moderate"
+main = "index.ts"
+compatibility_date = "2026-07-18"
+# Nothing is published until a run happens, so a missed tick only delays
+# publication. Every 15 minutes keeps the queue moving without being chatty.
+[triggers]
+crons = ["*/15 * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "brookebrodack"
+database_id = "dc50a79e-5479-4685-ac29-4c7f15fa5c57"

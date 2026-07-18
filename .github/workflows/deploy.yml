@@ -120,6 +120,8 @@ jobs:
             "index.html"
             "brookers/index.html"
             "content/index.html"
+            "guestbook/index.html"
+            "guestbook/admin/index.html"
             "site/index.html"
             "store/index.html"
             "robots.txt"
@@ -146,14 +148,17 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy app/brookebrodack-site/dist/browser --project-name=brookebrodack
+          # Config-driven: wrangler.toml supplies the output dir, the D1
+          # binding, and compiles functions/ into the deployment. Passing the
+          # directory positionally here would skip all three.
+          command: pages deploy --project-name=brookebrodack
 
       # Post-deploy smoke test — verify live site returns 200
       - name: Smoke test live site
         run: |
           echo "Waiting 15s for deployment to propagate..."
           sleep 15
-          routes=("/" "/brookers" "/content" "/site" "/store" "/robots.txt" "/rss" "/sitemap.xml")
+          routes=("/" "/brookers" "/content" "/guestbook" "/site" "/store" "/robots.txt" "/rss" "/sitemap.xml")
           failed=0
           for route in "${routes[@]}"; do
             status=$(curl -sL -o /dev/null -w "%{http_code}" "https://brookebrodack.net${route}")
@@ -166,6 +171,53 @@ jobs:
           done
           if [ "$failed" -eq 1 ]; then
             echo "Smoke test failed — one or more routes did not return 200"
+            exit 1
+          fi
+          # Content smoke test. Pages serves the SPA fallback (the home page)
+          # with a 200 for unknown paths, so a status check alone cannot tell a
+          # real page from a missing one. Assert a page-specific marker too.
+          declare -A markers=(
+            ["/brookers"]="brookers__doc_html"
+            ["/content"]="content__doc_html"
+            ["/guestbook"]="guestbook__doc_html"
+            ["/guestbook/admin"]="guestbook_admin__doc_html"
+            ["/site"]="site__doc_html"
+            ["/store"]="store__doc_html"
+          )
+          for route in "${!markers[@]}"; do
+            marker="${markers[$route]}"
+            if curl -sL "https://brookebrodack.net${route}" | grep -q "$marker"; then
+              echo "OK (content): ${route} contains ${marker}"
+            else
+              echo "FAIL (content): ${route} is missing ${marker} — serving the fallback page?"
+              failed=1
+            fi
+          done
+          if [ "$failed" -eq 1 ]; then
+            echo "Smoke test failed — one or more routes served the wrong page"
+            exit 1
+          fi
+          # Guestbook API smoke test. A missing Pages Function does not 404 —
+          # it falls through to the SPA fallback and returns the home page as
+          # HTML with a 200, so assert on the content type and JSON shape.
+          api="https://brookebrodack.net/guestbook/api/entries"
+          ctype=$(curl -sL -o /tmp/gb.json -w "%{content_type}" "$api")
+          case "$ctype" in
+            application/json*)
+              if jq -e 'type == "array"' /tmp/gb.json > /dev/null 2>&1; then
+                echo "OK (api): ${api} returned a JSON array"
+              else
+                echo "FAIL (api): ${api} returned JSON but not an array"
+                failed=1
+              fi
+              ;;
+            *)
+              echo "FAIL (api): ${api} returned '${ctype}' — Function not deployed?"
+              failed=1
+              ;;
+          esac
+          if [ "$failed" -eq 1 ]; then
+            echo "Smoke test failed — the guestbook API is not responding correctly"
             exit 1
           fi
           # Asset smoke test

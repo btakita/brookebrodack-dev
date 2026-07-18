@@ -1,0 +1,19 @@
+# Cloudflare Pages project config.
+#
+# The site itself is a static export (see app/brookebrodack-site/static-export.ts);
+# `functions/` adds the guestbook API on top of it, backed by D1.
+#
+# Secrets (set with `bunx wrangler pages secret put <NAME> --project-name=brookebrodack`):
+#   GUESTBOOK_ADMIN_PASSWORD — password for /guestbook/admin
+#   GUESTBOOK_ADMIN_SECRET   — HMAC key for the admin session cookie and IP hashing
+name = "brookebrodack"
+compatibility_date = "2026-07-18"
+pages_build_output_dir = "app/brookebrodack-site/dist/browser"
+
+# Schema lives in d1/migrations/ (distinct from app/brookebrodack-site/db/,
+# which is the build-time SQLite used to render the static site). Apply with:
+#   bunx wrangler d1 execute brookebrodack --remote --file d1/migrations/<file>.sql
+[[d1_databases]]
+binding = "DB"
+database_name = "brookebrodack"
+database_id = "dc50a79e-5479-4685-ac29-4c7f15fa5c57"

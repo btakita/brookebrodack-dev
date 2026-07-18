@@ -10,3 +10,6 @@ tmp
 .agent-doc/
 .yalc/
 yalc.lock
+
+# wrangler local state (pages dev, local D1)
+.wrangler/

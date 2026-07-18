@@ -6,7 +6,10 @@
 		"build": "cd ./app/brookebrodack-site && bun run build",
 		"clear": "cd ./app/brookebrodack-site && bun clear",
 		"dev": "cd ./app/brookebrodack-site && bun dev",
-		"start": "cd ./app/brookebrodack-site && bun start"
+		"start": "cd ./app/brookebrodack-site && bun start",
+		"test": "bun test app/brookebrodack-site/test test/guestbook-moderate.test.ts",
+		"test:dom": "bun test test/guestbook-hyop.test.ts",
+		"test:all": "bun run test && bun run test:dom"
 	},
 	"devDependencies": {
 		"@anthropic-ai/sdk": "^0.79.0",
@@ -14,12 +17,14 @@
 		"@btakita/dev-bin": "^0.1.0",
 		"@changesets/cli": "^2.27.7",
 		"@ctx-core/monorepo": "^21.4.147",
+		"@happy-dom/global-registrator": "^20.11.0",
 		"@types/js-yaml": "^4.0.9",
 		"@typescript-eslint/eslint-plugin": "^7.16.0",
 		"@typescript-eslint/parser": "^7.16.0",
 		"broken-link-checker": "^0.7.8",
 		"bun-types": "latest",
 		"eslint": "^9.7.0",
+		"happy-dom": "^20.11.0",
 		"js-yaml": "^4.1.1"
 	},
 	"peerDependencies": {
