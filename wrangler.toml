@@ -32,3 +32,15 @@ pages_build_output_dir = "app/brookebrodack-site/dist/browser"
 binding = "DB"
 database_name = "brookebrodack"
 database_id = "dc50a79e-5479-4685-ac29-4c7f15fa5c57"
+
+# Push moderation to the freehold host instead of waiting for the 15-minute
+# cron sweep. Binds the Pages project to workers/guestbook-dispatch, whose
+# Durable Object holds the host's WebSocket open.
+#
+# Optional: unbound, the guestbook behaves exactly as it did before — inline
+# moderation at submit, cron sweep behind it, admin dashboard for the rest.
+# Deploy workers/guestbook-dispatch BEFORE adding this binding, or the Pages
+# deploy fails on a service that does not exist yet.
+[[services]]
+binding = "FREEHOLD_HUB_SVC"
+service = "brookebrodack-guestbook-dispatch"

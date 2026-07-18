@@ -18,6 +18,28 @@ export type env_T = {
 	OPENAI_API_KEY?:string
 	/** Optional model override for inline moderation; defaults to gpt-4o-mini. */
 	OPENAI_MODEL?:string
+	/**
+	 * Service binding to workers/guestbook-dispatch. When bound, a new entry
+	 * is pushed to the freehold host over its open WebSocket instead of
+	 * waiting for the 15-minute cron sweep. Optional everywhere: unbound, the
+	 * guestbook behaves exactly as it did before.
+	 */
+	FREEHOLD_HUB_SVC?:Fetcher
+}
+/**
+ * Tell the dispatch hub an entry is pending.
+ *
+ * Best-effort and non-blocking by contract: the row is already committed, and
+ * every failure here leaves it `pending` for the cron Worker or the admin
+ * dashboard. A freehold that is offline must never fail a submission.
+ */
+export async function freehold__notify(env:env_T) {
+	if (!env.FREEHOLD_HUB_SVC) return
+	try {
+		await env.FREEHOLD_HUB_SVC.fetch('https://guestbook-dispatch/notify', { method: 'POST' })
+	} catch (err) {
+		console.error('guestbook: freehold notify failed', err)
+	}
 }
 export type guestbook_entry_row_T = {
 	id:number

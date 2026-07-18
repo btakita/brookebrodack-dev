@@ -7,7 +7,7 @@
 		"clear": "cd ./app/brookebrodack-site && bun clear",
 		"dev": "cd ./app/brookebrodack-site && bun dev",
 		"start": "cd ./app/brookebrodack-site && bun start",
-		"test": "bun test app/brookebrodack-site/test test/guestbook-moderate.test.ts test/guestbook-retention.test.ts",
+		"test": "bun test app/brookebrodack-site/test test/guestbook-moderate.test.ts test/guestbook-retention.test.ts test/guestbook-dispatch.test.ts",
 		"test:dom": "bun test test/guestbook-hyop.test.ts",
 		"test:all": "bun run test && bun run test:dom"
 	},

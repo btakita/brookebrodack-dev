@@ -22,6 +22,7 @@
 import {
 	batch__judge,
 	batch_size,
+	decision_a1__apply,
 	openai__provider,
 	type decision_T,
 	type pending_entry_T,
@@ -69,23 +70,7 @@ export async function moderate(env:env_T) {
 		decision_a1.push(
 			...await batch__judge(pending_a1.slice(i, i + batch_size), provider_a1))
 	}
-	const tally = { approve: 0, reject: 0, escalate: 0 }
-	const statement_a1 = []
-	for (const decision of decision_a1) {
-		tally[decision.decision]++
-		if (decision.decision === 'escalate') continue
-		statement_a1.push(env.DB
-			.prepare(
-				`UPDATE guestbook_entry
-				 SET status = ?, moderated_at = datetime('now'), moderation_reason = ?
-				 WHERE id = ? AND status = 'pending'`)
-			.bind(
-				decision.decision === 'approve' ? 'approved' : 'rejected',
-				`AI moderation: ${decision.reason}`.slice(0, 500),
-				decision.id))
-	}
-	// One batch round-trip rather than a query per entry.
-	if (statement_a1.length) await env.DB.batch(statement_a1)
+	const tally = await decision_a1__apply(env.DB, decision_a1)
 	console.log(
 		`guestbook-moderate: approved ${tally.approve}, rejected ${tally.reject},`
 		+ ` left for review ${tally.escalate}`)

@@ -1,0 +1,32 @@
+# Freehold dispatch hub.
+#
+# A separate Worker rather than part of the Pages project because a Pages
+# Function cannot export a Durable Object class, and a DO is the only thing on
+# Cloudflare that can hold a WebSocket open between requests. Same structural
+# reason workers/guestbook-moderate is separate: Pages Functions have no
+# scheduled handler either.
+#
+# Both bind the same D1 database as the Pages project, so the push path and the
+# 15-minute cron path moderate the same queue. Keep the cron Worker deployed —
+# it is the backstop for whenever the freehold host is offline.
+#
+# Secrets (`bunx wrangler secret put <NAME>` from this directory):
+#   FREEHOLD_DISPATCH_KEY — shared secret the freehold host presents on connect
+name = "brookebrodack-guestbook-dispatch"
+main = "index.ts"
+compatibility_date = "2026-07-18"
+
+[[durable_objects.bindings]]
+name = "FREEHOLD_HUB"
+class_name = "freehold_hub_C"
+
+# The DO uses the WebSocket Hibernation API, so an idle host connection is not
+# billed as a running object — which for a personal guestbook is nearly always.
+[[migrations]]
+tag = "v1"
+new_classes = ["freehold_hub_C"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "brookebrodack"
+database_id = "dc50a79e-5479-4685-ac29-4c7f15fa5c57"

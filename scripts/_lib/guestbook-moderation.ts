@@ -249,3 +249,36 @@ export function text__json(text:string) {
 	const end = body.lastIndexOf('}')
 	return start >= 0 && end > start ? body.slice(start, end + 1) : body
 }
+/**
+ * Apply decisions to the guestbook table.
+ *
+ * Shared by every path that can publish — the cron Worker, the local script,
+ * and the freehold dispatch hub — so the two guards below exist once instead
+ * of three times:
+ *
+ * - `escalate` writes nothing. An entry nobody was confident about stays
+ *   pending for a human; that is the whole point of the vocabulary.
+ * - `WHERE status = 'pending'` means a decision can never re-open an entry an
+ *   admin already handled, or apply twice if a verdict arrives late and a
+ *   retry already landed.
+ */
+export async function decision_a1__apply(db:D1Database, decision_a1:decision_T[]) {
+	const tally = { approve: 0, reject: 0, escalate: 0 }
+	const statement_a1 = []
+	for (const decision of decision_a1) {
+		tally[decision.decision]++
+		if (decision.decision === 'escalate') continue
+		statement_a1.push(db
+			.prepare(
+				`UPDATE guestbook_entry
+				 SET status = ?, moderated_at = datetime('now'), moderation_reason = ?
+				 WHERE id = ? AND status = 'pending'`)
+			.bind(
+				decision.decision === 'approve' ? 'approved' : 'rejected',
+				`AI moderation: ${decision.reason}`.slice(0, 500),
+				decision.id))
+	}
+	// One batch round-trip rather than a query per entry.
+	if (statement_a1.length) await db.batch(statement_a1)
+	return tally
+}

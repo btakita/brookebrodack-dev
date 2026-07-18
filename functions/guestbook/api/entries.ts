@@ -3,6 +3,7 @@ import {
 	entry__public_,
 	entry__validate,
 	error_,
+	freehold__notify,
 	guestbook_entry__rate_limit,
 	type guestbook_entry_row_T,
 	ip_hash_,
@@ -97,6 +98,9 @@ export const onRequestPost:PagesFunction<env_T> = async ({ request, env })=>{
 			console.error('guestbook: inline moderation failed', err)
 		}
 	}
+	// Still pending — nobody has judged it. Push it to the freehold host now
+	// rather than leaving it for the next cron tick.
+	if (status === 'pending') await freehold__notify(env)
 	// `rejected` and `pending` deliberately read the same to the submitter: a
 	// spammer learns nothing from the difference, and a false positive still
 	// looks like a normal outcome to a real visitor.
