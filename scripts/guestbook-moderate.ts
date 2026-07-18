@@ -94,7 +94,7 @@ async function pending_a1__load() {
 	const rows = await d1_query<pending_entry_T>(
 		`SELECT id, name, message, create_dts
 		 FROM guestbook_entry
-		 WHERE status = 'pending'
+		 WHERE status = 'pending' AND deleted_at IS NULL
 		 ORDER BY id
 		 LIMIT ?`,
 		[limit])

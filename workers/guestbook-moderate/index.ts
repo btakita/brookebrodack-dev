@@ -53,7 +53,7 @@ export async function moderate(env:env_T) {
 		.prepare(
 			`SELECT id, name, message, create_dts
 			 FROM guestbook_entry
-			 WHERE status = 'pending'
+			 WHERE status = 'pending' AND deleted_at IS NULL
 			 ORDER BY id
 			 LIMIT ?`)
 		.bind(limit)

@@ -27,6 +27,11 @@ export type guestbook_entry_row_T = {
 	status:'pending'|'approved'|'rejected'
 	moderated_at:string|null
 	moderation_reason:string|null
+	/**
+	 * Set when an admin deletes the entry. Entries are never removed from the
+	 * table, so this is the only thing that hides one from every read path.
+	 */
+	deleted_at?:string|null
 }
 export const guestbook_entry__name__maxlength = 80
 export const guestbook_entry__message__maxlength = 1000

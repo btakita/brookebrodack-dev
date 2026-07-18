@@ -15,14 +15,15 @@ const entry__page_size = 200
  * `GET /guestbook/api/entries` — approved entries, newest first.
  *
  * Only `status = 'approved'` is ever served. Pending and rejected entries are
- * visible solely through the admin dashboard.
+ * visible solely through the admin dashboard, and a soft-deleted entry is
+ * served by nothing.
  */
 export const onRequestGet:PagesFunction<env_T> = async ({ env })=>{
 	const { results } = await env.DB
 		.prepare(`
 			SELECT id, name, message, create_dts
 			FROM guestbook_entry
-			WHERE status = 'approved'
+			WHERE status = 'approved' AND deleted_at IS NULL
 			ORDER BY create_dts DESC, id DESC
 			LIMIT ?`)
 		.bind(entry__page_size)
