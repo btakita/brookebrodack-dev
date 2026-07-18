@@ -12,7 +12,22 @@ pages_build_output_dir = "app/brookebrodack-site/dist/browser"
 
 # Schema lives in d1/migrations/ (distinct from app/brookebrodack-site/db/,
 # which is the build-time SQLite used to render the static site). Apply with:
-#   bunx wrangler d1 execute brookebrodack --remote --file d1/migrations/<file>.sql
+#   bunx wrangler d1 execute brookebrodack --remote --env-file /dev/null \
+#     --file d1/migrations/<file>.sql
+#
+# `--env-file /dev/null` is required, not optional. This repo's .env is written
+# for shell sourcing and holds
+#   CLOUDFLARE_API_TOKEN="$(passage btak/CLOUDFLARE_API_TOKEN)"
+# but wrangler auto-loads .env as dotenv, which does no command substitution —
+# so it sends that literal `$(passage ...)` text as the credential. That is what
+# produces "Invalid format for Authorization header [code: 6111]", and with only
+# the account id expanded, "not authorized to access this service [code: 7403]".
+# Neither is an expired login: the stored OAuth session carries d1:write and
+# works fine once .env is kept out of the way.
+#
+# ORDERING: apply the migration BEFORE pushing code that reads the new column.
+# Pages deploys on push, and a function selecting a column that does not exist
+# yet fails closed and serves an error page for the whole API.
 [[d1_databases]]
 binding = "DB"
 database_name = "brookebrodack"
