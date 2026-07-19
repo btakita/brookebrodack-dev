@@ -10,7 +10,8 @@
 		"test": "bun test app/brookebrodack-site/test test/guestbook-moderate.test.ts test/guestbook-retention.test.ts test/guestbook-dispatch.test.ts",
 		"test:dom": "bun test test/guestbook-hyop.test.ts",
 		"test:all": "bun run test && bun run test:dom",
-		"typecheck": "tsc -p tsconfig.json --noEmit"
+		"typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:browser": "tsc -p tsconfig.browser.json --noEmit"
 	},
 	"devDependencies": {
 		"@anthropic-ai/sdk": "^0.79.0",

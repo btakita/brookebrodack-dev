@@ -1,0 +1,43 @@
+{
+  // The browser half: lib/** and the DOM test. The other side of the split that
+  // tsconfig.json describes — that config pulls in @cloudflare/workers-types,
+  // which replaces `Response` with the Workers one, and browser code checked
+  // against it fails on every element it passes around. One config cannot cover
+  // both, so this one takes the DOM lib and no Workers globals. It mirrors the
+  // split package.json already makes between `test` and `test:dom`.
+  //
+  // `moduleResolution: bundler` for the same reason as tsconfig.json: this runs
+  // on Bun and imports .ts extensions. Do not pair `module: esnext` with
+  // `moduleResolution: nodenext` — that is TS5110, and it aborts the check
+  // before reading a single file.
+  //
+  // Asset imports (`import bg from '.../nature-origami-bg.webp'`) are declared
+  // in types/assets.d.ts. app/brookebrodack-site gets those from
+  // `rebuildjs/types`, but rebuildjs is not a dependency of this package, and
+  // naming it in `types` aborts the whole check with TS2688.
+  //
+  // Not wired into CI yet: 15 errors remain, all in
+  // lib/domain--server--brookebrodack/youtube/, and none are fixable here.
+  // @rappstack/domain--server--youtube pins drizzle-orm ^0.32.0 while
+  // @rappstack/domain--server pins ^0.45.1, so the table type and the db handle
+  // come from two different drizzle type universes. Fix belongs in rappstack:
+  // align both packages on one drizzle-orm major and republish.
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "module": "esnext",
+    "target": "esnext",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "composite": false,
+    "strict": true,
+    "downlevelIteration": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowJs": true,
+    "types": ["bun-types"]
+  },
+  "include": ["lib/**/*.ts", "types/**/*.d.ts", "test/guestbook-hyop.test.ts"]
+}
