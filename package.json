@@ -14,12 +14,12 @@
     "typecheck:browser": "tsc -p tsconfig.browser.json --noEmit"
 	},
 	"devDependencies": {
-		"@anthropic-ai/sdk": "^0.79.0",
+		"@anthropic-ai/sdk": "^0.112.3",
 		"@btakita/-brookebrodack-dev-bin": "workspace:*",
 		"@btakita/dev-bin": "^0.1.0",
-		"@changesets/cli": "^2.27.7",
+		"@changesets/cli": "^2.31.1",
 		"@cloudflare/workers-types": "^5.20260718.1",
-		"@ctx-core/monorepo": "^21.4.147",
+		"@ctx-core/monorepo": "^21.4.162",
 		"@happy-dom/global-registrator": "^20.11.0",
 		"@types/js-yaml": "^4.0.9",
 		"@typescript-eslint/eslint-plugin": "^7.16.0",

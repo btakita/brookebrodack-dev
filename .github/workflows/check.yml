@@ -61,5 +61,29 @@ jobs:
       #   - run: bun run typecheck:browser
       #   - run: cd app/brookebrodack-site && bun run typecheck
 
+      # app/brookebrodack-site/test/routes.test.ts spawns `bun ./start.ts` and
+      # fetches it on :14101 — that is the production server, so it needs a
+      # migrated db and a build to exist first, exactly as the test file's own
+      # Prerequisites comment says. Without these two steps start.ts never
+      # binds and all 20 route tests report ConnectionRefused, which reads like
+      # a network problem rather than a missing build.
+      - name: Initialize database
+        run: cd app/brookebrodack-site && bun db/migrate.ts
+        env:
+          NODE_ENV: production
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          YOUTUBE_CHANNELID: ${{ secrets.YOUTUBE_CHANNELID }}
+          YOUTUBE_RSS_URL: ${{ secrets.YOUTUBE_RSS_URL }}
+
+      - name: Build
+        run: bun run build
+        env:
+          NODE_ENV: production
+
       - run: bun run test
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          YOUTUBE_CHANNELID: ${{ secrets.YOUTUBE_CHANNELID }}
+          YOUTUBE_RSS_URL: ${{ secrets.YOUTUBE_RSS_URL }}
+
       - run: bun run test:dom
