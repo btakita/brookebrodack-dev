@@ -1,0 +1,43 @@
+name: Check
+
+# The deploy workflow builds and ships without ever running `typecheck` or
+# `test`, which is how tsconfig.json sat in a state where the type-check had
+# never run at all. This runs both on every push so that cannot recur.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Same yalc -> npm rewrite the deploy workflow uses; CI has no local
+      # .yalc store.
+      - name: Resolve yalc dependencies to npm
+        run: |
+          sed -i 's|"file:\.yalc/@rappstack/[^"]*"|"^0.1.0"|g' package.json
+          rm -f bun.lock
+
+      - run: bun install --ignore-scripts
+
+      - name: Type-check (parent)
+        run: bun run typecheck
+
+      # NOT gated yet: `cd app/brookebrodack-site && bun run typecheck` is
+      # clean for that package's own sources but still reports 46 errors it
+      # does not own — 24 in this repo's lib/** (#tsbrowser) and 22 in the
+      # @rappstack/* sources. Add the step once those are cleared rather than
+      # landing a step that is red on day one.
+
+      - run: bun run test
+      - run: bun run test:dom
