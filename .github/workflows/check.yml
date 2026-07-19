@@ -75,10 +75,13 @@ jobs:
           YOUTUBE_CHANNELID: ${{ secrets.YOUTUBE_CHANNELID }}
           YOUTUBE_RSS_URL: ${{ secrets.YOUTUBE_RSS_URL }}
 
+      # Deliberately NOT NODE_ENV=production. start.ts loads
+      # ./dist/server--dev/index.js unless NODE_ENV is production, and a
+      # production build emits only ./dist/server — so a production build here
+      # gives the test a server that cannot boot. A plain build emits both
+      # bundles, which is exactly what a developer has locally.
       - name: Build
         run: bun run build
-        env:
-          NODE_ENV: production
 
       - run: bun run test
         env:
