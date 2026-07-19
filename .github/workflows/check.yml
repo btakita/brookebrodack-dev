@@ -51,15 +51,22 @@ jobs:
       - name: Type-check (edge)
         run: bun run typecheck
 
-      # The two type-checks below are NOT gated yet. Neither reports a single
-      # error in code this repo can fix: all 39 come from the yalc/npm
-      # @rappstack sources, which ship .ts so skipLibCheck never applies —
-      # 24 in @rappstack itself (a marked 13 -> 17 renderer signature, a zod
-      # errorMap) and 15 where @rappstack/domain--server--youtube pins
-      # drizzle-orm ^0.32.0 while @rappstack/domain--server pins ^0.45.1, so a
-      # table type and a db handle come from two different drizzle universes.
-      # Gate both once rappstack aligns those versions; a step that is red on
-      # day one only teaches people to ignore it.
+      # The two type-checks below are NOT gated yet, but the reason has
+      # narrowed to one step. Every error was in the yalc/npm @rappstack
+      # sources, which ship .ts so skipLibCheck never applies. Those are now
+      # FIXED in rappstack (github rappstack/dev): drizzle aligned on ^0.45.1,
+      # @rappstack/ui--any ported to the marked 17 token-object renderer API,
+      # domain--server--blog moved off the removed zod errorMap option, and
+      # three undefined-pathname / narrowing sites tightened. Against the local
+      # yalc store all three type-checks are green.
+      #
+      # They stay commented out because the step above rewrites the yalc
+      # file: deps to "^0.1.0" and CI therefore resolves the PUBLISHED
+      # @rappstack packages, which still predate those fixes — simulating that
+      # rewrite locally reproduces 31 errors. Uncomment both once
+      # @rappstack/ui--any, domain--server, and domain--server--blog are
+      # published to npm; a step that is red on day one only teaches people to
+      # ignore it.
       #
       #   - run: bun run typecheck:browser
       #   - run: cd app/brookebrodack-site && bun run typecheck
