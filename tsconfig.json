@@ -1,9 +1,27 @@
 {
+  // The deployable edge code: Pages Functions, Workers, the scripts they share,
+  // and the tests that exercise them. Cloudflare's globals — D1Database,
+  // PagesFunction, DurableObject — come from @cloudflare/workers-types.
+  //
+  // `moduleResolution: bundler`, not `nodenext`: this runs on Bun and imports
+  // .ts extensions. The old pairing (module esnext + moduleResolution nodenext)
+  // is illegal, and TS5110 aborted the whole check before reading a single
+  // file — which is how a wrong `scheduled()` handler signature and 60-odd
+  // missing-global errors sat here unnoticed. If you change one of those two
+  // options, change the other.
+  //
+  // Scoped with `include` on purpose, and NOT extended to the whole repo:
+  // @cloudflare/workers-types replaces `Response` with the Workers one, which
+  // is incompatible with the DOM's, so browser code checked against it fails on
+  // every element it passes around. `lib/` and test/guestbook-hyop.test.ts are
+  // the browser half and are not checked here — the same split package.json
+  // already makes between `test` and `test:dom`. app/brookebrodack-site is a
+  // submodule with its own tsconfig (which carries this same TS5110 bug).
   "compilerOptions": {
     "lib": ["ESNext"],
     "module": "esnext",
     "target": "esnext",
-    "moduleResolution": "nodenext",
+    "moduleResolution": "bundler",
     "moduleDetection": "force",
     "allowImportingTsExtensions": true,
     "noEmit": true,
@@ -11,13 +29,20 @@
     "strict": true,
     "downlevelIteration": true,
     "skipLibCheck": true,
-    "jsxImportSource": "solid-js",
-    "jsx": "preserve",
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "allowJs": true,
     "types": [
-      "bun-types" // add Bun global
+      "@cloudflare/workers-types",
+      "bun-types"
     ]
-  }
+  },
+  "include": [
+    "functions/**/*.ts",
+    "workers/**/*.ts",
+    "scripts/**/*.ts",
+    "test/guestbook-moderate.test.ts",
+    "test/guestbook-dispatch.test.ts",
+    "test/guestbook-retention.test.ts"
+  ]
 }

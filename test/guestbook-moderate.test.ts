@@ -140,7 +140,7 @@ describe('worker scheduled moderate()', ()=>{
 		globalThis.fetch = (async()=>new Response(JSON.stringify(body), {
 			status: ok ? 200 : 500,
 			headers: { 'Content-Type': 'application/json' },
-		})) as typeof fetch
+		})) as unknown as typeof fetch
 	}
 	const real_fetch = globalThis.fetch
 	afterAll(()=>{ globalThis.fetch = real_fetch })
@@ -196,7 +196,7 @@ describe('entry__judge_now (submit-time moderation)', ()=>{
 		globalThis.fetch = (async()=>new Response(JSON.stringify(ok
 			? { choices: [{ message: { content: JSON.stringify({
 				decisions: [{ id: 7, decision, reason: 'because' }] }) } }] }
-			: { error: { message: 'down' } }), { status: ok ? 200 : 503 })) as typeof fetch
+			: { error: { message: 'down' } }), { status: ok ? 200 : 503 })) as unknown as typeof fetch
 	}
 
 	it('publishes an approved entry immediately', async()=>{
@@ -238,7 +238,7 @@ describe('entry__judge_now (submit-time moderation)', ()=>{
 		const db = db__spy()
 		globalThis.fetch = ((_u:unknown, init?:RequestInit)=>new Promise((_res, rej)=>{
 			init?.signal?.addEventListener('abort', ()=>rej(new Error('The operation timed out.')))
-		})) as typeof fetch
+		})) as unknown as typeof fetch
 		expect(await entry__judge_now(entry, { db, api_key: 'k', timeout_ms: 50 })).toBe('pending')
 		expect(db.applied.length).toBe(0)
 	})

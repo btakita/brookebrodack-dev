@@ -56,18 +56,18 @@ beforeEach(()=>{ document.body.innerHTML = '' })
 
 describe('guestbook__hyop load states', ()=>{
 	it('renders entries returned by the API', async()=>{
-		globalThis.fetch = (async()=>Response.json(entry_a1)) as typeof fetch
+		globalThis.fetch = (async()=>Response.json(entry_a1)) as unknown as typeof fetch
 		await guestbook__hyop(section_())
 		expect(entries__text()).toContain('Loved your videos!')
 		expect(entries__text()).toContain('Hello from Boston')
 	})
 	it('shows an empty-state message when there are no entries', async()=>{
-		globalThis.fetch = (async()=>Response.json([])) as typeof fetch
+		globalThis.fetch = (async()=>Response.json([])) as unknown as typeof fetch
 		await guestbook__hyop(section_())
 		expect(entries__text()).toContain('Be the first to sign the guestbook')
 	})
 	it('shows an error state when the API fails', async()=>{
-		globalThis.fetch = (async()=>new Response('nope', { status: 500 })) as typeof fetch
+		globalThis.fetch = (async()=>new Response('nope', { status: 500 })) as unknown as typeof fetch
 		await guestbook__hyop(section_())
 		expect(entries__text()).toContain('could not be loaded')
 	})
@@ -75,7 +75,7 @@ describe('guestbook__hyop load states', ()=>{
 		globalThis.fetch = (async()=>Response.json([{
 			id: 9, name: '<img src=x onerror=alert(1)>', message: '<script>alert(2)</script>',
 			created_at: '2026-01-01T00:00:00Z',
-		}])) as typeof fetch
+		}])) as unknown as typeof fetch
 		await guestbook__hyop(section_())
 		const entries = document.querySelector('#guestbook__entries')!
 		expect(entries.querySelector('img')).toBeNull()
@@ -90,7 +90,7 @@ describe('guestbook__hyop submit states', ()=>{
 		globalThis.fetch = (async(_u:unknown, init?:RequestInit)=>{
 			if (init?.method === 'POST') posts++
 			return Response.json([])
-		}) as typeof fetch
+		}) as unknown as typeof fetch
 		await guestbook__hyop(section_())
 		form__fill('', '')
 		await submit__drive()
@@ -101,7 +101,7 @@ describe('guestbook__hyop submit states', ()=>{
 	it('shows the API message as an info notice on success', async()=>{
 		globalThis.fetch = (async(_u:unknown, init?:RequestInit)=>init?.method === 'POST'
 			? Response.json({ status: 'approved', message: 'Your message is now on the page.' })
-			: Response.json(entry_a1)) as typeof fetch
+			: Response.json(entry_a1)) as unknown as typeof fetch
 		await guestbook__hyop(section_())
 		form__fill('Ann', 'Hello there')
 		await submit__drive()
@@ -112,7 +112,7 @@ describe('guestbook__hyop submit states', ()=>{
 	it('reports a held entry as pending rather than silently clearing', async()=>{
 		globalThis.fetch = (async(_u:unknown, init?:RequestInit)=>init?.method === 'POST'
 			? Response.json({ status: 'pending', message: 'will appear once it has been reviewed.' })
-			: Response.json([])) as typeof fetch
+			: Response.json([])) as unknown as typeof fetch
 		await guestbook__hyop(section_())
 		form__fill('Ann', 'Hello there')
 		await submit__drive()
@@ -122,7 +122,7 @@ describe('guestbook__hyop submit states', ()=>{
 	it('surfaces a rejected submission as an error and re-enables the button', async()=>{
 		globalThis.fetch = (async(_u:unknown, init?:RequestInit)=>init?.method === 'POST'
 			? new Response('Too many messages.', { status: 429 })
-			: Response.json([])) as typeof fetch
+			: Response.json([])) as unknown as typeof fetch
 		await guestbook__hyop(section_())
 		form__fill('Ann', 'Hello there')
 		await submit__drive()
@@ -137,7 +137,7 @@ describe('guestbook__hyop submit states', ()=>{
 			if (init?.method !== 'POST') return Response.json([])
 			if (fail) { fail = false; return new Response('Nope.', { status: 400 }) }
 			return Response.json({ status: 'approved', message: 'Your message is now on the page.' })
-		}) as typeof fetch
+		}) as unknown as typeof fetch
 		await guestbook__hyop(section_())
 		form__fill('Ann', 'Hello there')
 		await submit__drive()

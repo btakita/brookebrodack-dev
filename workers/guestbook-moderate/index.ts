@@ -38,7 +38,10 @@ export type env_T = {
 	GUESTBOOK_MODERATE_LIMIT?:string
 }
 export default {
-	async scheduled(_event:ScheduledEvent, env:env_T, ctx:ExecutionContext) {
+	// ScheduledController, not ScheduledEvent — the DOM-ish `ScheduledEvent` is
+	// a different shape entirely, and the mismatch went unnoticed only because
+	// tsconfig.json had never successfully type-checked this file.
+	async scheduled(_controller:ScheduledController, env:env_T, ctx:ExecutionContext) {
 		ctx.waitUntil(moderate(env))
 	},
 } satisfies ExportedHandler<env_T>
