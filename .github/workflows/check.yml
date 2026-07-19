@@ -45,6 +45,9 @@ jobs:
           AWS_ENDPOINT_URL: ${{ secrets.AWS_ENDPOINT_URL }}
           AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
 
+      - name: Lint
+        run: bun run lint
+
       - name: Type-check (edge)
         run: bun run typecheck
 
